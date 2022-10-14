@@ -180,6 +180,10 @@ class COCODataset(JointsDataset):
             # ignore objs without keypoints annotation
             if max(obj['keypoints']) == 0:
                 continue
+            
+            mask = self.coco.annToMask(objs[0])
+            for i in range(len(objs)):
+                mask += self.coco.annToMask(objs[i])
 
             joints_3d = np.zeros((self.num_joints, 3), dtype=np.float)
             joints_3d_vis = np.zeros((self.num_joints, 3), dtype=np.float)
@@ -197,6 +201,7 @@ class COCODataset(JointsDataset):
             center, scale = self._box2cs(obj['clean_bbox'][:4])
             rec.append({
                 'image': self.image_path_from_index(index),
+                'mask': mask,
                 'center': center,
                 'scale': scale,
                 'joints_3d': joints_3d,

@@ -25,8 +25,9 @@ import _init_paths
 from config import cfg
 from config import update_config
 from core.loss import JointsMSELoss
-from core.function import validate
+from core.function import compute_epe, compute_poseig, find_J2J, test_on_RI, validate
 from utils.utils import create_logger
+import poseig
 
 import dataset
 import models
@@ -122,8 +123,29 @@ def main():
     )
 
     # evaluate on validation set
-    validate(cfg, valid_loader, valid_dataset, model, criterion,
-             final_output_dir, tb_log_dir)
+    # validate(cfg, valid_loader, valid_dataset, model, criterion,
+    #          final_output_dir, tb_log_dir)
+    
+    # compute_poseig(valid_loader, model, final_output_dir)
+    
+    # compute_epe(valid_loader, model, final_output_dir)
+    
+    # poseig.get_epe_pickle(source_dir=os.path.join(final_output_dir, "offline_ig"), target_dir=os.path.join(final_output_dir, "epes"))
+    
+    # debug_largest_epe(cfg, valid_loader, valid_dataset, model, criterion,
+    #          final_output_dir, tb_log_dir)
+    
+    # test_on_dependency(cfg, valid_loader, valid_dataset, model, criterion,
+    #          final_output_dir, tb_log_dir)
+    
+    # test_on_relation(cfg, valid_loader, valid_dataset, model, criterion,
+    #          final_output_dir, tb_log_dir)
+    
+    find_J2J(valid_loader, model, final_output_dir)
+    
+    # test_on_RI(cfg, valid_loader, valid_dataset, model, criterion,
+    #       final_output_dir, tb_log_dir)
+
 
 
 if __name__ == '__main__':

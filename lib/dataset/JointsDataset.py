@@ -141,6 +141,8 @@ class JointsDataset(Dataset):
         s = db_rec['scale']
         score = db_rec['score'] if 'score' in db_rec else 1
         r = 0
+        
+        
 
         if self.is_train:
             if (np.sum(joints_vis[:, 0]) > self.num_joints_half_body
@@ -170,6 +172,27 @@ class JointsDataset(Dataset):
             trans,
             (int(self.image_size[0]), int(self.image_size[1])),
             flags=cv2.INTER_LINEAR)
+        
+        mask = db_rec['mask']
+        mask = cv2.warpAffine(
+            mask,
+            trans,
+            (int(self.image_size[0]), int(self.image_size[1])),
+            flags=cv2.INTER_LINEAR)
+        vals,counts = np.unique(mask, return_counts=True)
+        counts[0] = 0
+        index = np.argmax(counts)
+        mask = np.where(mask == vals[index], 1, 0).astype(np.float32)
+        mask = torch.from_numpy(mask)
+        
+        # mask = np.expand_dims(mask, axis=-1)
+        # mask = (mask - np.min(mask)) / (np.max(mask) - np.min(mask) + 1e-5)
+        # mask = mask * 255
+        # mask = mask.astype(np.uint8).copy()
+        # print(mask.shape)
+        # print(np.max(mask))
+        # cv2.imwrite('mask_test.jpg', mask)
+        # assert False
 
         if self.transform:
             input = self.transform(input)
@@ -185,6 +208,7 @@ class JointsDataset(Dataset):
 
         meta = {
             'image': image_file,
+            'mask': mask,
             'filename': filename,
             'imgnum': imgnum,
             'joints': joints,
