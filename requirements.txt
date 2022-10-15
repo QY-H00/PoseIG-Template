@@ -9,3 +9,6 @@ json_tricks
 scikit-image
 yacs>=0.1.5
 tensorboardX>=1.6
+numpyencoder
+matplotlib
+kornia==0.1.4

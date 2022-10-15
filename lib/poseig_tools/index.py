@@ -1,5 +1,3 @@
-import os
-import pickle
 import torch
 import torch.nn as nn
 import numpy as np
@@ -143,55 +141,4 @@ def compute_RI(ig, hm, jt_1, jt_2):
     rl_1to2 = compute_LI(ig_1, hm_2)[0, 0]
     return rl_1to2
 
-
-def get_epe_pickle(source_dir, target_dir):
-    file_path = os.path.join(target_dir, 'epes.pickle')
-    UNDEFINED = -1
-    epes = UNDEFINED
-    weights = UNDEFINED
-    for i in range(200):
-        file = os.path.join(source_dir, f'epe_B{i}.pickle')
-        if not os.path.exists(file):
-            break
-        with open (file, 'rb') as f:
-            epe, weight = pickle.load(f)
-            if epes is UNDEFINED:
-                epes = epe
-            else:
-                epes = np.append(epes, epe.numpy(), axis=0)
-            if weights is UNDEFINED:
-                weights = weight
-            else:
-                weights = np.append(weights, weight.numpy(), axis=0)
-    if not os.path.exists(target_dir):
-        try:
-            os.makedirs(target_dir)
-        except Exception:
-            print('Fail to make {}'.format(target_dir))
-    
-    with open(file_path, 'wb') as f:
-        pickle.dump([epes, weights], f)
-    print(epes.shape, weights.shape)
-    return epes, weights
-    
-
-def compute_indices_with_largest_epes(target_dir, t=10):
-    file_path = os.path.join(target_dir, 'epes.pickle')
-    with open(file_path, 'rb') as f:
-        epes, targets = pickle.load(f)
-    
-    targets = targets.reshape(-1, )
-    epes = epes.reshape(-1,)
-    masked_epes = epes * targets
-    k = len(epes) - t
-    # selected_indices = np.argpartition(epes, k)[k-5:]
-    selected_indices = np.argpartition(masked_epes, k)[k-5:]
-    # print(selected_indices)
-    # print(53015 / 17, 53015 % 17)
-    # print(targets[masked_selected_indices])
-    # assert False
-    sample_indices = (selected_indices / 17).astype(np.int64)
-    joint_indices = selected_indices % 17
-    return sample_indices, joint_indices
-    
     

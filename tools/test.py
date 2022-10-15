@@ -12,6 +12,7 @@ from __future__ import print_function
 import argparse
 import os
 import pprint
+from xmlrpc.client import Boolean
 
 import torch
 import torch.nn.parallel
@@ -25,7 +26,7 @@ import _init_paths
 from config import cfg
 from config import update_config
 from core.loss import JointsMSELoss
-from core.function import compute_epe, compute_poseig, find_J2J, test_on_RI, validate
+from core.function import compute_epe, compute_poseig, find_J2J, test_on_RI, validate, visualize
 from utils.utils import create_logger
 import poseig
 
@@ -62,6 +63,28 @@ def parse_args():
                         help='prev Model directory',
                         type=str,
                         default='')
+    parser.add_argument('--evaluate',
+                        default=False,
+                        action='store_true',
+                        help="Evaluate the model under MSCOCO standard")
+    parser.add_argument('--poseig',
+                        default=False,
+                        action='store_true',
+                        help="Compute poseig of the model")
+    parser.add_argument('--epe',
+                        default=False,
+                        action="store_true",
+                        help="Compute EPE of the model")
+    parser.add_argument('--vis',
+                        default=False,
+                        action="store_true",
+                        help="visualize a certain sample and joint indicated by --vis_sample and --vis_joint")
+    parser.add_argument('--vis_sample',
+                        type=int,
+                        default=-1)
+    parser.add_argument('--vis_joint',
+                        type=int,
+                        default=-1)
 
     args = parser.parse_args()
     return args
@@ -122,26 +145,23 @@ def main():
         pin_memory=True
     )
 
-    # evaluate on validation set
-    # validate(cfg, valid_loader, valid_dataset, model, criterion,
-    #          final_output_dir, tb_log_dir)
+    if args.evaluate:
+        validate(cfg, valid_loader, valid_dataset, model, criterion,
+                final_output_dir, tb_log_dir)
     
-    # compute_poseig(valid_loader, model, final_output_dir)
+    if args.poseig:
+        compute_poseig(valid_loader, model, final_output_dir)
     
-    # compute_epe(valid_loader, model, final_output_dir)
+    if args.epe:
+        compute_epe(valid_loader, model, final_output_dir)
     
-    # poseig.get_epe_pickle(source_dir=os.path.join(final_output_dir, "offline_ig"), target_dir=os.path.join(final_output_dir, "epes"))
+    if args.vis:
+        if args.vis_sample == -1 or args.vis_joint == -1:
+            raise Exception("Please indicate the sample and the joint that you want to visualize.")
+        visualize(valid_loader, model, final_output_dir, sample=args.vis_sample, joint=args.vis_joint)
     
-    # debug_largest_epe(cfg, valid_loader, valid_dataset, model, criterion,
-    #          final_output_dir, tb_log_dir)
     
-    # test_on_dependency(cfg, valid_loader, valid_dataset, model, criterion,
-    #          final_output_dir, tb_log_dir)
-    
-    # test_on_relation(cfg, valid_loader, valid_dataset, model, criterion,
-    #          final_output_dir, tb_log_dir)
-    
-    find_J2J(valid_loader, model, final_output_dir)
+    # find_J2J(valid_loader, model, final_output_dir)
     
     # test_on_RI(cfg, valid_loader, valid_dataset, model, criterion,
     #       final_output_dir, tb_log_dir)
