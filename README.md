@@ -102,6 +102,7 @@ ${POSE_ROOT}
 #### Compute PoseIG
 
 `load_ig`: True if directly loading ig from dist, throw exception if ig haven't been computed.
+
 `save_ig`: True if saving ig to dist.
 
 ```
