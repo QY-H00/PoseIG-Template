@@ -206,6 +206,7 @@ To conclude, `back_info` should contain the following elements:
 1. Help compute the output of the model
 2. Help transform the output into the location of 2D/3D keypoints
 3. Help get the ground truth keypoint
+
 For an existing example, you could refer to `lib/poseig_tools/ig.py:detection_back_func()` and `lib/poseig_tools/ig.py:regression_back_func()`.
 
 ### Reference
