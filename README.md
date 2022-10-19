@@ -210,7 +210,7 @@ To conclude, `back_info` should contain the following elements:
 For an existing example, you could refer to `lib/poseig_tools/ig.py:detection_back_func()` and `lib/poseig_tools/ig.py:regression_back_func()`.
 
 ### Reference
-We adopt code and model from the repository https://github.com/leoxiaobin/deep-high-resolution-net.
+We adopt the model in this example from the repository https://github.com/leoxiaobin/deep-high-resolution-net.
 
 ```
 @inproceedings{sun2019deep,
