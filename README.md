@@ -101,8 +101,11 @@ ${POSE_ROOT}
 
 #### Compute PoseIG
 
+`load_ig`: True if directly loading ig from dist, throw exception if ig haven't been computed.
+`save_ig`: True if saving ig to dist.
+
 ```
-python tools/test.py --poseig --cfg experiments/coco/resnet/res50_256x192_d256x3_adam_lr1e-3.yaml TEST.MODEL_FILE models/pytorch/pose_coco/pose_resnet_50_256x192.pth TEST.USE_GT_BBOX True
+python tools/test.py --poseig --load_ig False --save_ig True --cfg experiments/coco/resnet/res50_256x192_d256x3_adam_lr1e-3.yaml TEST.MODEL_FILE models/pytorch/pose_coco/pose_resnet_50_256x192.pth TEST.USE_GT_BBOX True
 ```
 
 #### Compute EPE
@@ -112,6 +115,8 @@ python tools/test.py --epe --cfg experiments/coco/resnet/res50_256x192_d256x3_ad
 ```
 
 #### Visualize
+
+**Prerequiste**: PoseIG of requested sample is computed and saved.
 
 ```
 python tools/test.py --vis --vis_sample 3633 --vis_joint 9 --cfg experiments/coco/resnet/res50_256x192_d256x3_adam_lr1e-3.yaml TEST.MODEL_FILE models/pytorch/pose_coco/pose_resnet_50_256x192.pth TEST.USE_GT_BBOX True
