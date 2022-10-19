@@ -79,6 +79,14 @@ def parse_args():
                         default=False,
                         action="store_true",
                         help="visualize a certain sample and joint indicated by --vis_sample and --vis_joint")
+    parser.add_argument('--load_ig',
+                        default=False,
+                        action="store_true",
+                        help="Directly loads ig if it's already computed.")
+    parser.add_argument('--save_ig',
+                        default=False,
+                        action="store_true",
+                        help="Save ig after it's computed.")
     parser.add_argument('--vis_sample',
                         type=int,
                         default=-1)
@@ -150,7 +158,7 @@ def main():
                 final_output_dir, tb_log_dir)
     
     if args.poseig:
-        compute_poseig(valid_loader, model, final_output_dir)
+        compute_poseig(valid_loader, model, final_output_dir, load_ig=args.load_ig, save_ig=args.save_ig)
     
     if args.epe:
         compute_epe(valid_loader, model, final_output_dir)
