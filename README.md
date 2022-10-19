@@ -106,7 +106,7 @@ ${POSE_ROOT}
 `save_ig`: True if saving ig to dist.
 
 ```
-python tools/test.py --poseig --load_ig False --save_ig True --cfg experiments/coco/resnet/res50_256x192_d256x3_adam_lr1e-3.yaml TEST.MODEL_FILE models/pytorch/pose_coco/pose_resnet_50_256x192.pth TEST.USE_GT_BBOX True
+python tools/test.py --poseig --save_ig --cfg experiments/coco/resnet/res50_256x192_d256x3_adam_lr1e-3.yaml TEST.MODEL_FILE models/pytorch/pose_coco/pose_resnet_50_256x192.pth TEST.USE_GT_BBOX True
 ```
 
 #### Compute EPE
