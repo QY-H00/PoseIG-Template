@@ -195,10 +195,10 @@ Since `compute_FI()` requires mask as same size as input image, `compute_LI()` r
 You could refer to `lib/core/function:compute_poseig()` and `lib/core/function:compute_epe()`. Basically, the customized code should enumerate the dataset and apply `lib/poseig_tools/ig.py:compute_poseig()` and `lib/poseig_tools/ig.py:compute_epe()` seperately.
 
 #### Modify back function
-Since the output of each model is different, we need to modify `back_func` and `back_info` when calling `lib/poseig_tools/ig.py:compute_poseig()`. 
+Since the output of each model is different, we need to modify `back_func` and `back_info` when calling `lib/poseig_tools/ig.py:compute_poseig()`. You could find more details in the documentation in the script of that function itself.
 
 ##### back_func()
-Basically, `back_func` returns a differential tensor with size `(B, J)`. It firstly computes the output of given model with given image. Then it uses other information to transform the output of the model into the location of keypoint (2D for human, 3D for hand). Then we use `target = torch.exp(-0.3*torch.linalg.norm(pred_kp - gt_kp, axis=-1))` and return, where `pred_kp` is the prediction of keypoints and `gt_kp` is the corresponding groundtruth. 
+Basically, `back_func` returns a differential tensor with size `(B, J)`. It firstly computes the output of given model with given image. Then it uses other information to transform the output of the model into the location of keypoint (2D for human, 3D for hand). Then we use `target = torch.exp(-0.3*torch.linalg.norm(pred_kp - gt_kp, axis=-1))` and return, where `pred_kp` is the prediction of keypoints and `gt_kp` is the corresponding groundtruth.
 
 ##### back_info
 `back_info` is a dictionary that you can customize to proceed `back_func()`. For example, some model may use other information such as mask or some embeddings apart from image to get the output. Then you can encode it into `back_info` and help compute the output of the model. Aditionally, some model may not directly output the location of keypoints, then `back_info` can also contains information that you transform the output of the model into the keypoints. Finally, `back_info` needs to also include information to get `gt_kp`.
@@ -206,6 +206,7 @@ To conclude, `back_info` should contain the following elements:
 1. Help compute the output of the model
 2. Help transform the output into the location of 2D/3D keypoints
 3. Help get the ground truth keypoint
+For an existing example, you could refer to `lib/poseig_tools/ig.py:detection_back_func()` and `lib/poseig_tools/ig.py:regression_back_func()`.
 
 ### Reference
 We adopt code and model from the repository https://github.com/leoxiaobin/deep-high-resolution-net.
