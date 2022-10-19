@@ -100,7 +100,7 @@ ${POSE_ROOT}
 ### PoseIG Package Illustration
 
 #### Overview
-All PoseIG related function is located at `lib/poseig_tools`. The function used to generate **poseig**, `epe.json` and `idx.json` is located at **lib/core/function**. For more information, you could refer to the documentation and comments that can be found in the script. 
+All PoseIG related function is located at `lib/poseig_tools`. The function used to generate **poseig**, `epe.json` and `idx.json` is located at `lib/core/function`. For more information, you could refer to the documentation and comments that can be found in the script. 
 
 #### Compute poseig and generate idx.json
 To compute poseig for a certain dataset, you could modify the function 'lib/core/function:compute_poseig()'. In this package, the most important function is `lib/poseig_tools/ig.py:compute_poseig()`. To generate poseig for a certain model and dataset, you need to modify `back_func` and `back_info` in the function. For index computation, you could refer to `compute_DI()`, `compute_FI()`, `compute_LI()`, `compute_RI()` in `poseig_tools/index.py`.
