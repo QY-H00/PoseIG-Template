@@ -192,7 +192,7 @@ Additionally, install pytorch >= v1.0.0 following [official instruction](https:/
 Since `compute_FI()` requires mask as same size as input image, `compute_LI()` requires gaussian heatmap of the keypoint, dataloader should include them when accessing a sample. For your convenience, `lib/poseig_tools/data_utils:gen_heatmap()` is provided to generate gaussian heatmap given a keypoint in dataloader.
 
 #### Modify main function
-You could refer to `lib/core/function:compute_poseig()` and `lib/core/function:compute_epe()`. Basically, the customized code should enumerate the dataset and apply `lib/poseig_tools/ig.py:compute_poseig()` and `lib/poseig_tools/ig.py:compute_epe()` seperately.
+You could refer to `lib/core/function:compute_poseig()` and `lib/core/function:compute_epe()`. Basically, the customized code should enumerate the dataset and apply `lib/poseig_tools/ig.py:compute_poseig()` and `lib/poseig_tools/ig.py:compute_epe()` seperately. Then use `lib/poseig_tools/data_util.py:IG_DB` to correctly save the outputs.
 
 #### Modify back function
 Since the output of each model is different, we need to modify `back_func` and `back_info` when calling `lib/poseig_tools/ig.py:compute_poseig()`. You could find more details in the documentation in the script of that function itself.
