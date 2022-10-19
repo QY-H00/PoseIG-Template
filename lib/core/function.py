@@ -247,7 +247,7 @@ def validate(config, val_loader, val_dataset, model, criterion, output_dir,
         return perf_indicator
 
 
-def compute_poseig(val_loader, model, output_dir, load_ig=True, save_idx=True, save_ig=False):
+def compute_poseig(val_loader, model, output_dir, load_ig=False, save_idx=True, save_ig=True):
     # switch to evaluate mode
     model.eval()
 
