@@ -134,7 +134,18 @@ To compute various indices, you could modify the function `lib/core/function:com
 ```
 
 #### Save file
-To generate index.json and epe.json, class `lib/poseig_tools/data_util:IG_DB` is used to track the output of all the algorithm. You could refer to `lib/core/function` to see how to use the class. Basically, it will create a folder called `IG_DB` in given path (a parameter used to create `IG_DB`). All PoseIG file will be store in `path/IG_DB/ig`. For example, the 9th sample in the dataset will be store as `9_ig.pickle` in it. File `epe.json` and index.json will be also saved in it.
+To generate index.json and epe.json, class `lib/poseig_tools/data_util:IG_DB` is used to track the output of all the algorithm. You could refer to `lib/core/function` to see how to use the class. Basically, it will create a folder called `IG_DB` in given path (a parameter used to create `IG_DB`). All PoseIG file will be store in `path/IG_DB/ig`. For example, the 9th sample in the dataset will be store as `9_ig.pickle` in it. File `epe.json` and index.json will be also saved in it. Basically, it will look like this:
+
+```
+${OUTPUT_ROOT}
+|-- IG_DB
+    |-- ig
+        |-- 0_ig.pickle
+        |-- 1_ig.pickle
+        |-- ...
+    |-- idx.json
+    |-- epe.json
+```
 
 
 ### Testing on COCO val2017 dataset using model zoo's models([GoogleDrive](https://drive.google.com/drive/folders/1hOTihvbyIxsm5ygDpbUuJ7O_tzv4oXjC?usp=sharing) or [OneDrive](https://1drv.ms/f/s!AhIXJn_J-blW231MH2krnmLq5kkQ))
