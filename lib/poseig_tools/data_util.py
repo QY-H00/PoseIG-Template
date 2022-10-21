@@ -15,7 +15,7 @@ class IG_DB:
         
         self.ig_path = os.path.join(db_path, "ig")
         self.idx_json = os.path.join(db_path, "idx.json")
-        self.epe_json = os.path.join(db_path, "epe_json")
+        self.epe_json = os.path.join(db_path, "epe.json")
         self.idx_dict = {}
         self.epe_dict = {}
         
