@@ -144,7 +144,7 @@ Specifically, idx.json encodes a dictionary. Let's called it `idx_dict`. And eac
    'DI': [...],
    'FI': [...],
    'LI': [...].
-   'target_weight': [...]
+   'weight': [...]
 },
 '1': {
    ...
@@ -157,7 +157,7 @@ To compute various indices, you could modify the function `lib/core/function:com
 ```
 {'0': {
    'EPE': [...],
-   'target_weight': [...]
+   'weight': [...]
 },
 '1': {
    ...
