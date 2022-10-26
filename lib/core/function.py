@@ -249,22 +249,25 @@ def validate(config, val_loader, val_dataset, model, criterion, output_dir,
 
 def compute_poseig(val_loader, model, output_dir, load_ig=False, save_idx=True, save_ig=True):
     # switch to evaluate mode
+    selected_batch_idx = [157, 321, 42, 158, 366, 143, 280, 305, 224, 386, 227, 228, 232, 296, 55, 344, 351, 18, 242, 34]
+    batch_size = 16
     model.eval()
 
-    length = len(val_loader)
+    length = len(selected_batch_idx)
     DI = AverageMeter()
     FI = AverageMeter()
     LI = AverageMeter()
     db = poseig.IG_DB(os.path.join(output_dir, "IG_DB"))
 
+    count = 0
     bar = Bar(f'\033[31m Process \033[0m', max=length)
-    load_ig_cursor = 0
-    save_ig_cursor = 0
-    idx_cursor = 0
     for i, (input, target, target_weight, meta) in enumerate(val_loader):
+        if i not in selected_batch_idx:
+            continue
+        count += 1
         last = time.time()
         if load_ig:
-            ig, load_ig_cursor = db.load_batch_ig(batch_size=input.shape[0], cursor=load_ig_cursor)
+            ig, _ = db.load_batch_ig(batch_size=input.shape[0], cursor=i * batch_size)
         else:
             back_info = {"gt_hm": target.to("cuda")}
             ig = poseig.compute_poseig(input.to("cuda"), model, poseig.detection_back_func, back_info, poseig.batch_gaussian_path)
@@ -303,9 +306,9 @@ def compute_poseig(val_loader, model, output_dir, load_ig=False, save_idx=True, 
                     LI=LI.avg,
                     cost=time.time() - last
                 )
-        idx_cursor = db.record_batch_idx(di_bh, fi_bh, li_bh, target_weight, cursor=idx_cursor)
+        db.record_batch_idx(di_bh, fi_bh, li_bh, target_weight, cursor=i * batch_size)
         if save_ig:
-            save_ig_cursor = db.store_batch_ig(ig, cursor=save_ig_cursor)
+            db.store_batch_ig(ig, cursor=i * batch_size)
         bar.next()
     if save_idx:
         db.save_idx_json()
@@ -332,9 +335,19 @@ def visualize(val_loader, model, output_dir, sample=3633, joint=5):
             ig_file_name = os.path.join(prefix, ig_file_name)
             img_file_name = '{}_img.jpg'.format(sample)
             img_file_name = os.path.join(prefix, img_file_name)
+            kde_file_name = '{}_{}_kde.jpg'.format(sample, joint)
+            kde_file_name = os.path.join(prefix, kde_file_name)
             poseig.visualize_ig(ig.detach().cpu(), path=ig_file_name)
             
+            start = time.time()
+            print(f"\nStart kernel density estimation, the process requires nearly 1 minutes...")
+            kde = poseig.vis_saliency_kde(ig.detach().cpu(), zoomin=1)
+            print(f"\nFinish kde, time cost: {time.time() - start}")
+            
             img_np = poseig.torch_to_cv2_img(input[sample % batch_size])
+            blend_kde = poseig.blend_input(kde.convert("RGB"), poseig.cv2_to_pil(img_np))
+            cv2.imwrite(kde_file_name, poseig.pil_to_cv2(blend_kde))
+            
             kps = poseig.regress25d(model(input))[sample % batch_size] * 4
             # gt_kps = poseig.regress25d(target.to("cuda"))[sample % batch_size] * 4
             img_np = poseig.draw_kps(img_np, poseig.torch_to_cv2_kp(kps))
@@ -356,12 +369,6 @@ def compute_epe(val_loader, model, output_dir, mode="default", save_epe=True):
     bar = Bar(f'\033[31m Process \033[0m', max=length)
     for i, (input, target, target_weight, meta) in enumerate(val_loader):
         # compute output
-        dir_path = os.path.join(db.db_path, "epe")
-        if not os.path.exists(dir_path):
-            try:
-                os.makedirs(dir_path)
-            except Exception:
-                logger.error('Fail to make {}'.format(dir_path))
         last = time.time()
 
         model = model.to("cuda")
