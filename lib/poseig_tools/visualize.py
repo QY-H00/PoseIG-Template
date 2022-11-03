@@ -50,6 +50,10 @@ def pil_to_cv2(img):
     return image
 
 
+def pil_to_np(img):
+    return np.array(img)
+
+
 def vis_saliency_kde(map, zoomin=4):
     grad_flat = map.reshape((-1))
     datapoint_y, datapoint_x = np.mgrid[0:map.shape[0]:1, 0:map.shape[1]:1]
@@ -67,3 +71,33 @@ def vis_saliency_kde(map, zoomin=4):
     s1, s2 = Img.size
     return Img.resize((s1 * zoomin, s2 * zoomin), Image.BICUBIC)
 
+
+def visualize_target(img_np, kp, path):
+    fig, ax = plt.subplots()
+    ax.spines['top'].set_visible(True)
+    ax.spines['right'].set_visible(True)
+    ax.spines['bottom'].set_visible(True)
+    ax.spines['left'].set_visible(True)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    cv2.rectangle(img_np, pt1=(kp[0]-10, kp[1]-10), pt2=(kp[0] + 10, kp[1] + 10), color=(0, 0, 255), thickness=3)
+    img_np = cv2.cvtColor(img_np.astype(np.uint8), cv2.COLOR_BGR2RGB)
+    plt.tight_layout()
+    ax.imshow(img_np)
+    plt.savefig(path, bbox_inches='tight')
+    
+
+def visualize_kde(img_np, attr, path="kde.jpg"):
+    fig, ax = plt.subplots()
+    ax.spines['top'].set_visible(True)
+    ax.spines['right'].set_visible(True)
+    ax.spines['bottom'].set_visible(True)
+    ax.spines['left'].set_visible(True)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    kde = vis_saliency_kde(attr, zoomin=1)
+    blend_kde = blend_input(kde.convert('RGB'), cv2_to_pil(img_np))
+    output = pil_to_np(blend_kde)
+    plt.tight_layout()
+    ax.imshow(output)
+    plt.savefig(path, bbox_inches='tight')

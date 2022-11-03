@@ -249,7 +249,7 @@ def validate(config, val_loader, val_dataset, model, criterion, output_dir,
 
 def compute_poseig(val_loader, model, output_dir, load_ig=False, save_idx=True, save_ig=True):
     # switch to evaluate mode
-    selected_batch_idx = [157, 321, 42, 158, 366, 143, 280, 305, 224, 386, 227, 228, 232, 296, 55, 344, 351, 18, 242, 34]
+    selected_batch_idx = [204, 7, 174, 170, 128, 36, 165, 265, 324, 345, 286, 333, 332, 292, 295, 302, 226, 125, 2, 162]
     batch_size = 16
     model.eval()
 
@@ -314,8 +314,87 @@ def compute_poseig(val_loader, model, output_dir, load_ig=False, save_idx=True, 
         db.save_idx_json()
     bar.finish()
 
+
+def compute_RI(val_loader, model, output_dir):
+    # switch to evaluate mode
+    selected_batch_idx = [204, 7, 174, 170, 128, 36, 165, 265, 324, 345, 286, 333, 332, 292, 295, 302, 226, 125, 2, 162]
+    batch_size = 16
+    model.eval()
+
+    length = len(selected_batch_idx)
+    RI_dict = {}
+    db = poseig.IG_DB(os.path.join(output_dir, "IG_DB"))
+
+    count = 0
+    bar = Bar(f'\033[31m Process \033[0m', max=length)
+    for i, (input, target, target_weight, meta) in enumerate(val_loader):
+        if i not in selected_batch_idx:
+            continue
+        count += 1
+        last = time.time()
+        ig, _ = db.load_batch_ig(batch_size=input.shape[0], cursor=i * batch_size)
+        
+        target_weight = target_weight[:, :, 0].detach().cpu().numpy() # (B, J, 1) -> (B, J)
+        valid_count = np.sum(target_weight)
+
+        hm = torchvision.transforms.Resize((meta['mask'].shape[-2], meta['mask'].shape[-1])).to("cuda").forward(target).to("cuda")
+        ri_bh = np.zeros((batch_size, 17, 17))
+
+        torch.cuda.empty_cache()
+        
+        cursor = i * batch_size
+        for j in range(batch_size):
+            RI_dict[cursor + j] = {}
+            for jt1 in range(17):
+                RI_dict[cursor + j][jt1] = {}
+                for jt2 in range(17):
+                    RI_dict[cursor + j][jt1][jt2] = poseig.compute_RI(ig[j], hm[j], jt1, jt2).astype(float)
+        
+        bar.suffix = (
+                    '({batch}/{size}) '
+                    'time cost: {cost:.4f} | '
+                ).format(
+                    batch=count,
+                    size=length,
+                    cost=time.time() - last
+                )
+        bar.next()
     
-def visualize(val_loader, model, output_dir, sample=3633, joint=5):
+    with open(os.path.join(output_dir, "IG_DB", "RI.json"), 'w') as f:
+        json.dump(RI_dict, f)
+    
+    bar.finish()
+
+
+def save_dataloader_info(val_loader, model, output_dir, load_ig=False, save_idx=True, save_ig=True):
+    # switch to evaluate mode
+    model.eval()
+    save_path = "./data/coco/mask"
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
+    img_path_json = "./data/coco/img_path.json"
+    img_path_dict = {}
+
+    for i, (input, target, target_weight, meta) in enumerate(val_loader): 
+        # hm_bh = target
+        img_paths = meta['image_file']
+        batch_size = input.shape[0]
+        for j in range(batch_size):
+            img_path_dict[i * batch_size + j] = (img_paths[j], meta['center'][j].numpy().astype(int).tolist())
+        
+        # mask_bh = meta['mask'].unsqueeze(1)
+        # for j in range(mask_bh.shape[0]):
+        #     item_path = os.path.join(save_path, f'{round(i * mask_bh.shape[0] + j)}.jpg')
+        #     mask = poseig.torch_to_cv2_img(mask_bh[j])
+        #     cv2.imwrite(item_path, mask)
+        
+        print(i)
+    
+    with open(img_path_json, 'w') as f:
+        json.dump(img_path_dict, f)
+            
+
+def visualize(val_loader, model, output_dir, sample_idx=1000, joint=10):
     # switch to evaluate mode
     model.eval()
     
@@ -327,31 +406,33 @@ def visualize(val_loader, model, output_dir, sample=3633, joint=5):
 
         model = model.to("cuda")
         
-        if i == sample // batch_size:
-            ig = db.load_ig(sample)
+        if i == sample_idx // batch_size:
+            
+            kps = poseig.regress25d(model(input))[sample_idx % batch_size] * 4
+            ig = db.load_ig(sample_idx)[joint]
             target_dir = db.db_path
             prefix = os.path.join(target_dir, 'imgs')
-            ig_file_name = '{}_{}_ig.jpg'.format(sample, joint)
+            if not os.path.exists(prefix):
+                print('Create image directory...')
+                os.mkdir(prefix)
+            ig_file_name = '{}_{}_ig.jpg'.format(sample_idx, joint)
             ig_file_name = os.path.join(prefix, ig_file_name)
-            img_file_name = '{}_img.jpg'.format(sample)
+            img_file_name = '{}_{}_img.jpg'.format(sample_idx, joint)
             img_file_name = os.path.join(prefix, img_file_name)
-            kde_file_name = '{}_{}_kde.jpg'.format(sample, joint)
+            kde_file_name = '{}_{}_kde.jpg'.format(sample_idx, joint)
             kde_file_name = os.path.join(prefix, kde_file_name)
-            poseig.visualize_ig(ig.detach().cpu(), path=ig_file_name)
+            
+            ig_np = ig.detach().cpu().numpy()
+            img_np = poseig.torch_to_cv2_img(input[sample_idx % batch_size].detach().cpu())
+            kps_np = poseig.torch_to_cv2_kp(kps)
             
             start = time.time()
             print(f"\nStart kernel density estimation, the process requires nearly 1 minutes...")
-            kde = poseig.vis_saliency_kde(ig.detach().cpu(), zoomin=1)
+            poseig.visualize_ig(ig_np, path=ig_file_name)
+            poseig.visualize_kde(img_np, ig_np, path=kde_file_name)
+            poseig.visualize_target(img_np, kps_np[joint], path=img_file_name)
             print(f"\nFinish kde, time cost: {time.time() - start}")
             
-            img_np = poseig.torch_to_cv2_img(input[sample % batch_size])
-            blend_kde = poseig.blend_input(kde.convert("RGB"), poseig.cv2_to_pil(img_np))
-            cv2.imwrite(kde_file_name, poseig.pil_to_cv2(blend_kde))
-            
-            kps = poseig.regress25d(model(input))[sample % batch_size] * 4
-            # gt_kps = poseig.regress25d(target.to("cuda"))[sample % batch_size] * 4
-            img_np = poseig.draw_kps(img_np, poseig.torch_to_cv2_kp(kps))
-            cv2.imwrite(img_file_name, img_np)
             break
 
 
@@ -384,6 +465,8 @@ def compute_epe(val_loader, model, output_dir, mode="default", save_epe=True):
         pr_hm = model(input.to("cuda"))
         pr_kp = poseig.regress25d(pr_hm)
         gt_kp = poseig.regress25d(target.to("cuda"))
+        print(pr_hm.shape)
+        assert False
         epe = poseig.compute_EPE(pr_kp, gt_kp).detach().cpu().numpy()
         target_weight = target_weight[:, :, 0].detach().cpu().numpy()
         epe = epe * target_weight
