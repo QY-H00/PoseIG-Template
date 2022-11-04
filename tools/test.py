@@ -11,6 +11,7 @@ from __future__ import print_function
 
 import argparse
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "7"
 import pprint
 from xmlrpc.client import Boolean
 
@@ -26,7 +27,7 @@ import _init_paths
 from config import cfg
 from config import update_config
 from core.loss import JointsMSELoss
-from core.function import compute_epe, compute_poseig, find_J2J, test_on_RI, validate, visualize
+from core.function import compute_epe, compute_poseig, find_J2J, save_dataloader_info, test_on_RI, validate, visualize, compute_RI
 from utils.utils import create_logger
 import poseig
 
@@ -71,6 +72,10 @@ def parse_args():
                         default=False,
                         action='store_true',
                         help="Compute poseig of the model")
+    parser.add_argument('--j2j',
+                        default=False,
+                        action='store_true',
+                        help="Analyze J2J problem")
     parser.add_argument('--epe',
                         default=False,
                         action="store_true",
@@ -152,6 +157,9 @@ def main():
         num_workers=cfg.WORKERS,
         pin_memory=True
     )
+    
+    # save_dataloader_info(valid_loader, model, final_output_dir)
+    
 
     if args.evaluate:
         validate(cfg, valid_loader, valid_dataset, model, criterion,
@@ -160,19 +168,22 @@ def main():
     if args.poseig:
         compute_poseig(valid_loader, model, final_output_dir, load_ig=args.load_ig, save_ig=args.save_ig)
     
+    if args.j2j:
+        find_J2J(valid_loader, model, final_output_dir)
+        test_on_RI(cfg, valid_loader, valid_dataset, model, criterion,
+          final_output_dir, tb_log_dir)
+        compute_RI(valid_loader, model, final_output_dir)
+    
     if args.epe:
         compute_epe(valid_loader, model, final_output_dir)
     
     if args.vis:
         if args.vis_sample == -1 or args.vis_joint == -1:
             raise Exception("Please indicate the sample and the joint that you want to visualize.")
-        visualize(valid_loader, model, final_output_dir, sample=args.vis_sample, joint=args.vis_joint)
+        visualize(valid_loader, model, final_output_dir, sample_idx=args.vis_sample, joint=args.vis_joint)
     
     
-    # find_J2J(valid_loader, model, final_output_dir)
     
-    # test_on_RI(cfg, valid_loader, valid_dataset, model, criterion,
-    #       final_output_dir, tb_log_dir)
 
 
 
