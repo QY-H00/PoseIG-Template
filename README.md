@@ -1,4 +1,6 @@
-# PoseIG Example of Deep High-Resolution Representation Learning for Human Pose Estimation
+# PoseIG
+
+This is the official repository of [Analyzing and Diagnosing Pose Estimation With Attributions](https://openaccess.thecvf.com/content/CVPR2023/papers/He_Analyzing_and_Diagnosing_Pose_Estimation_With_Attributions_CVPR_2023_paper.pdf).
 
 ## Introduction
 The utilization of PoseIG is based on the example from https://github.com/leoxiaobin/deep-high-resolution-net.pytorch. Therefore, instruction to set up as well as the main programme is similar to the original repository. For illustration to use PoseIG, we use MSCOCO as the example.
